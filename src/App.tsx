@@ -225,7 +225,7 @@ const FaceDetectionComponent: React.FC = () => {
       <div className="container">
         <canvas
           ref={virtualCanvasRef}
-          width={400}
+          width={480}
           height={600}
           style={{
             display: isCameraOn ? 'block' : 'none',
