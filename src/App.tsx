@@ -9,19 +9,47 @@ const FaceDetectionComponent: React.FC = () => {
   const [cutImage, setCutImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isCameraOn && videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+    let stream: MediaStream | null = null; // Xác định kiểu dữ liệu của stream
 
+    const startCamera = () => {
       navigator.mediaDevices
         .getUserMedia({ video: true })
-        .then(function (stream) {
-          video.srcObject = stream;
+        .then(function (streamObj: MediaStream) {
+          // Xác định kiểu dữ liệu của streamObj
+          stream = streamObj; // Gán streamObj cho biến stream
+          videoRef!.current!.srcObject = stream;
+          console.log('Camera started');
         })
         .catch(function (err) {
           console.error('Error accessing the camera:', err);
         });
+    };
+
+    const stopCamera = () => {
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => {
+          track.stop();
+        });
+        console.log('Camera stopped');
+      }
+    };
+
+    if (isCameraOn && videoRef.current && canvasRef.current) {
+      startCamera();
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      // navigator.mediaDevices
+      //   .getUserMedia({ video: true })
+      //   .then(function (stream) {
+      //     video.srcObject = stream;
+      //     console.log('hello');
+      //   })
+      //   .catch(function (err) {
+      //     console.error('Error accessing the camera:', err);
+      //   });
 
       const cutImageIntoEllipse = () => {
         if (!video.paused && !video.ended && context) {
@@ -31,13 +59,20 @@ const FaceDetectionComponent: React.FC = () => {
           // Draw the video frame on the canvas
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+          // Create a background rectangle with a solid color
+          context.fillStyle = 'white'; // You can change the color here
+          context.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Set globalCompositeOperation to 'destination-out'
+          // context.globalCompositeOperation = 'destination-out';
+
           // Create an elliptical path (vertical ellipse)
           context.beginPath();
           context.ellipse(
             canvas.width / 2, // X coordinate of the center
             canvas.height / 2, // Y coordinate of the center
             canvas.width / 4, // Horizontal radius
-            canvas.height / 2.5, // Vertical radius (adjust as needed)
+            canvas.height / 2.95, // Vertical radius (adjust as needed)
             0, // Rotation angle (0 for vertical)
             0, // Start angle
             Math.PI * 2 // End angle
@@ -45,7 +80,7 @@ const FaceDetectionComponent: React.FC = () => {
           context.closePath();
 
           // Set the stroke style to white and increase the line width
-          context.strokeStyle = 'white';
+          context.strokeStyle = 'red';
           context.lineWidth = 8; // Increase the line width as needed
 
           // Set the line dash style
@@ -60,15 +95,6 @@ const FaceDetectionComponent: React.FC = () => {
           // Redraw the video frame, clipped to the elliptical path
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-          // Change global composite mode to 'destination-in'
-          // This will only draw the new shapes where the existing canvas content exists
-          context.globalCompositeOperation = 'destination-in';
-          context.beginPath();
-          context.rect(0, 0, canvas.width, canvas.height);
-          context.fillStyle = 'white'; // Color doesn't matter here
-          context.fill();
-
-          // Reset global composite mode
           context.globalCompositeOperation = 'source-over';
         }
 
@@ -77,7 +103,14 @@ const FaceDetectionComponent: React.FC = () => {
       };
 
       cutImageIntoEllipse();
+    } else {
+      stopCamera();
     }
+
+    // Clean-up function
+    return () => {
+      stopCamera();
+    };
   }, [isCameraOn]);
 
   const toggleCamera = () => {
