@@ -219,15 +219,13 @@ const FaceDetectionComponent: React.FC = () => {
 
       <video
         ref={videoRef}
-        width={300}
-        height={800}
         style={{ display: isCameraOn ? 'none' : 'none' }}
         autoPlay
       ></video>
       <div className="container">
         <canvas
           ref={virtualCanvasRef}
-          width={480}
+          width={400}
           height={600}
           style={{
             display: isCameraOn ? 'block' : 'none',
