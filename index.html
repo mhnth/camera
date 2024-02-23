@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Demo</title>
+</head>
+
+<body>
+  <h1>Camera Demo</h1>
+  <video id="videoElement" autoplay playsinline></video>
+
+  <script>
+    // Lấy truy cập vào camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function (stream) {
+        var videoElement = document.getElementById('videoElement');
+        videoElement.srcObject = stream;
+      })
+      .catch(function (err) {
+        console.log('Không thể truy cập vào camera: ' + err.message);
+      });
+  </script>
+</body>
+
+</html>
