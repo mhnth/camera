@@ -4,6 +4,59 @@ import * as faceapi from 'face-api.js';
 
 import React, { useEffect, useRef, useState } from 'react';
 
+const FaceDetectionComponent1: React.FC = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isCameraOn && videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(function (stream) {
+          video.srcObject = stream;
+        })
+        .catch(function (err) {
+          console.error('Error accessing the camera:', err);
+        });
+    }
+  }, [isCameraOn]);
+
+  const toggleCamera = () => {
+    setIsCameraOn((prevState) => !prevState);
+  };
+
+  return (
+    <div>
+      <h1>Face Detection with OpenCV.js</h1>
+      <video
+        ref={videoRef}
+        width={640}
+        height={480}
+        style={{ display: isCameraOn ? 'block' : 'none' }}
+        autoPlay
+      ></video>
+      <canvas
+        ref={canvasRef}
+        width={640}
+        height={480}
+        style={{ display: isCameraOn ? 'block' : 'none' }}
+      ></canvas>
+      <button onClick={toggleCamera}>
+        {isCameraOn ? 'Turn Off Camera' : 'Turn On Camera'}
+      </button>
+    </div>
+  );
+};
+
+// export default FaceDetectionComponent;
+
+// import React, { useEffect, useRef, useState } from 'react';
+
 const FaceDetectionComponent: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,16 +77,40 @@ const FaceDetectionComponent: React.FC = () => {
           console.error('Error accessing the camera:', err);
         });
 
-      const detectFaces = () => {
-        if (video.paused || video.ended) return false;
+      const cutImageIntoEllipse = () => {
+        if (!video.paused && !video.ended && context) {
+          // Clear the canvas
+          context.clearRect(0, 0, canvas.width, canvas.height);
 
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        // Perform face detection using OpenCV.js here...
+          // Draw the video frame on the canvas
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        requestAnimationFrame(detectFaces);
+          // Draw an ellipse mask
+          context.save();
+          context.beginPath();
+          context.ellipse(
+            canvas.width / 2,
+            canvas.height / 2,
+            canvas.width / 2,
+            canvas.height / 2,
+            0,
+            0,
+            Math.PI * 2
+          );
+          context.closePath();
+          context.clip();
+
+          // Apply the mask to the image
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          context.restore();
+
+          // Call recursively to keep updating the frame
+          requestAnimationFrame(cutImageIntoEllipse);
+        }
       };
 
-      detectFaces();
+      cutImageIntoEllipse();
     }
   }, [isCameraOn]);
 
@@ -43,7 +120,7 @@ const FaceDetectionComponent: React.FC = () => {
 
   return (
     <div>
-      <h1>Face Detection with OpenCV.js</h1>
+      <h1>Face Detection with OpenCV</h1>
       <video
         ref={videoRef}
         width={640}
