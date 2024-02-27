@@ -24,10 +24,6 @@ video {
   overflow: hidden;
 }
 
-.header {
-  margin-bottom: 12px;
-}
-
 canvas {
   width: 480px;
   height: 600px;
@@ -38,9 +34,18 @@ video {
   height: 600px;
 }
 
+.captureText {
+  width: 280px;
+  text-align: center;
+}
+
 .captureBox {
   /* position: absolute; */
   bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .circle {
@@ -61,4 +66,14 @@ video {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.closeBtn {
+  width: 36px;
+  height: 36px;
+  background-color: red;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 999px;
 }

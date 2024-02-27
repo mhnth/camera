@@ -217,9 +217,9 @@ const FaceDetectionComponent: React.FC = () => {
   return (
     <div>
       <div className="header">
-        <button onClick={toggleCamera}>
+        {/* <button onClick={toggleCamera}>
           {isCameraOn ? 'Turn Off Camera' : 'Turn On Camera'}
-        </button>
+        </button> */}
         {/* <button onClick={exportImage}>Export Image</button> */}
       </div>
 
@@ -251,7 +251,20 @@ const FaceDetectionComponent: React.FC = () => {
           <div onClick={cutAndDisplayImage} className="circle-outer">
             <div className="circle"></div>
           </div>
-          <div></div>
+          <div className="captureText">
+            Positionieren Sie Gesicht und Augenpartie und machen Sie ein Foto
+          </div>
+          <div onClick={toggleCamera} className="closeBtn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="28"
+              viewBox="0 -960 960 960"
+              width="28"
+              fill="#fff"
+            >
+              <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
+            </svg>
+          </div>
         </div>
         <div className="imgBox">
           {cutImage && <img width={'100vw'} src={cutImage} alt="Cut Image" />}
