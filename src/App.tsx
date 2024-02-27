@@ -204,15 +204,15 @@ const FaceDetectionComponent: React.FC = () => {
     }
   };
 
-  const exportImage = () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const link = document.createElement('a');
-      link.download = 'ellipse_image.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }
-  };
+  // const exportImage = () => {
+  //   if (canvasRef.current) {
+  //     const canvas = canvasRef.current;
+  //     const link = document.createElement('a');
+  //     link.download = 'ellipse_image.png';
+  //     link.href = canvas.toDataURL('image/png');
+  //     link.click();
+  //   }
+  // };
 
   return (
     <div>
