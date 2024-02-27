@@ -9,6 +9,9 @@ const FaceDetectionComponent: React.FC = () => {
   const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
   const [cutImage, setCutImage] = useState<string | null>(null);
 
+  let requestID1 = 0;
+  let requestID2 = 0;
+
   useEffect(() => {
     let stream: MediaStream | null = null; // Xác định kiểu dữ liệu của stream
 
@@ -34,6 +37,9 @@ const FaceDetectionComponent: React.FC = () => {
         });
         console.log('Camera stopped');
       }
+
+      cancelAnimationFrame(requestID1);
+      cancelAnimationFrame(requestID2);
     };
 
     if (
@@ -59,17 +65,23 @@ const FaceDetectionComponent: React.FC = () => {
             virtualCanvas.height
           );
 
+          // virtualContext.translate(virtualCanvas.width, 0);
+          // virtualContext.scale(-1, 1);
+
           // Draw the video frame on the canvas
-          virtualContext.drawImage(
-            video,
-            0,
-            0,
-            virtualCanvas.width,
-            virtualCanvas.height
-          );
+
+          // maybe we don't need this
+          // virtualContext.drawImage(
+          //   video,
+          //   0,
+          //   0,
+          //   virtualCanvas.width,
+          //   virtualCanvas.height
+          // );
 
           // Create a background rectangle with a solid color
           virtualContext.fillStyle = 'rgba(255, 255, 255, 0)'; // You can change the color here
+          virtualContext.fillStyle = 'rgba(2, 35, 86, 1)'; // You can change the color here
           virtualContext.fillRect(
             0,
             0,
@@ -83,27 +95,22 @@ const FaceDetectionComponent: React.FC = () => {
             virtualCanvas.width / 2, // X coordinate of the center
             virtualCanvas.height / 2, // Y coordinate of the center
             virtualCanvas.width / 4, // Horizontal radius
-            virtualCanvas.height / 2.95, // Vertical radius (adjust as needed)
+            virtualCanvas.height / 3.5, // Vertical radius (adjust as needed)
             0, // Rotation angle (0 for vertical)
             0, // Start angle
             Math.PI * 2 // End angle
           );
           virtualContext.closePath();
 
-          // Set the stroke style to white and increase the line width
           virtualContext.strokeStyle = 'white';
-          virtualContext.lineWidth = 8; // Increase the line width as needed
+          virtualContext.lineWidth = 4; // Increase the line width as needed
 
-          // Set the line dash style
           virtualContext.setLineDash([10, 5]); // [dashLength, spaceLength]
 
-          // Draw the stroke (border) of the ellipse
           virtualContext.stroke();
 
-          // Clip the canvas to the elliptical path
           virtualContext.clip();
 
-          // Redraw the video frame, clipped to the elliptical path
           virtualContext.drawImage(
             video,
             0,
@@ -111,30 +118,31 @@ const FaceDetectionComponent: React.FC = () => {
             virtualCanvas.width,
             virtualCanvas.height
           );
-
-          // context.globalCompositeOperation = 'source-over';
         }
 
-        // Call recursively to keep updating the frame
-        requestAnimationFrame(cutImageIntoEllipseVirtual);
+        return requestAnimationFrame(cutImageIntoEllipseVirtual);
       };
 
       const cutImageIntoEllipse = () => {
         if (!video.paused && !video.ended && context) {
           // Clear the canvas
-          context.clearRect(0, 0, canvas.width, canvas.height);
+
+          // maybe we dont need it
+          // context.clearRect(0, 0, canvas.width, canvas.height);
 
           // Set globalCompositeOperation to 'destination-out'
           context.globalCompositeOperation = 'destination-out';
 
           // Draw the video frame on the canvas
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          // context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
           context.globalCompositeOperation = 'source-over';
 
           // Create a background rectangle with a solid color
           context.fillStyle = 'rgba(255, 255, 255, 0)'; // You can change the color here
-          context.fillRect(0, 0, canvas.width, canvas.height);
+
+          // maybe we dont need it
+          // context.fillRect(0, 0, canvas.width, canvas.height);
 
           // Create an elliptical path (vertical ellipse)
           context.beginPath();
@@ -151,7 +159,7 @@ const FaceDetectionComponent: React.FC = () => {
 
           // Set the stroke style to white and increase the line width
           context.strokeStyle = 'white';
-          context.lineWidth = 2; // Increase the line width as needed
+          context.lineWidth = 0.5; // Increase the line width as needed
 
           // Set the line dash style
           context.setLineDash([10, 5]); // [dashLength, spaceLength]
@@ -169,11 +177,11 @@ const FaceDetectionComponent: React.FC = () => {
         }
 
         // Call recursively to keep updating the frame
-        requestAnimationFrame(cutImageIntoEllipse);
+        return requestAnimationFrame(cutImageIntoEllipse);
       };
 
-      cutImageIntoEllipse();
-      cutImageIntoEllipseVirtual();
+      requestID1 = cutImageIntoEllipse();
+      requestID2 = cutImageIntoEllipseVirtual();
     } else {
       stopCamera();
     }
@@ -209,12 +217,10 @@ const FaceDetectionComponent: React.FC = () => {
   return (
     <div>
       <div className="header">
-        <div>Face Detection with OpenC</div>
         <button onClick={toggleCamera}>
           {isCameraOn ? 'Turn Off Camera' : 'Turn On Camera'}
         </button>
-        <button onClick={cutAndDisplayImage}>Cut and Display Image</button>
-        <button onClick={exportImage}>Export Image</button>
+        {/* <button onClick={exportImage}>Export Image</button> */}
       </div>
 
       <video
@@ -222,7 +228,7 @@ const FaceDetectionComponent: React.FC = () => {
         style={{ display: isCameraOn ? 'none' : 'none' }}
         autoPlay
       ></video>
-      <div className="container">
+      <div className="captureContainer">
         <canvas
           ref={virtualCanvasRef}
           width={480}
@@ -241,8 +247,14 @@ const FaceDetectionComponent: React.FC = () => {
           }}
           className="canvas1"
         ></canvas>
+        <div className="captureBox">
+          <div onClick={cutAndDisplayImage} className="circle-outer">
+            <div className="circle"></div>
+          </div>
+          <div></div>
+        </div>
         <div className="imgBox">
-          {cutImage && <img src={cutImage} alt="Cut Image" />}
+          {cutImage && <img width={'100vw'} src={cutImage} alt="Cut Image" />}
         </div>
       </div>
     </div>

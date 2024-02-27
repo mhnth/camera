@@ -4,20 +4,61 @@
   height: 100%;
 }
 
-.container {
+video {
+  /* -webkit-transform: scaleX(-1);
+  transform: scaleX(-1); */
+}
+
+.captureContainer {
   display: flex;
   flex-direction: column;
   gap: 40px;
+  position: relative;
 }
 
 .canvas1,
 .imgBox {
   width: 100%;
-  max-width: 576px;
-  height: 600px;
+  /* max-width: 576px; */
+  /* height: 600px; */
   overflow: hidden;
 }
 
 .header {
   margin-bottom: 12px;
+}
+
+canvas {
+  width: 480px;
+  height: 600px;
+}
+
+video {
+  width: 390px;
+  height: 600px;
+}
+
+.captureBox {
+  /* position: absolute; */
+  bottom: 40px;
+}
+
+.circle {
+  width: 48px;
+  height: 48px;
+  background-color: #fff;
+  border-radius: 9999px;
+  margin: 0 auto;
+  content: '';
+}
+
+.circle-outer {
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
