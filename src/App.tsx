@@ -1,260 +1,146 @@
+import React, { useRef, useState } from 'react';
 import './App.css';
 
-import React, { useEffect, useRef, useState } from 'react';
-
-const FaceDetectionComponent: React.FC = () => {
+const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const virtualCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
-  const [cutImage, setCutImage] = useState<string | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
-  let requestID1 = 0;
-  let requestID2 = 0;
-
-  useEffect(() => {
-    let stream: MediaStream | null = null; // Xác định kiểu dữ liệu của stream
-
-    const startCamera = () => {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then(function (streamObj: MediaStream) {
-          // Xác định kiểu dữ liệu của streamObj
-          stream = streamObj; // Gán streamObj cho biến stream
-          videoRef!.current!.srcObject = stream;
-          console.log('Camera started');
-        })
-        .catch(function (err) {
-          console.error('Error accessing the camera:', err);
+  // Khi component được mount, chúng ta mở camera và vẽ hình ảnh từ camera lên canvas
+  React.useEffect(() => {
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
         });
-    };
-
-    const stopCamera = () => {
-      if (stream) {
-        const tracks = stream.getTracks();
-        tracks.forEach((track) => {
-          track.stop();
-        });
-        console.log('Camera stopped');
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
       }
-
-      cancelAnimationFrame(requestID1);
-      cancelAnimationFrame(requestID2);
     };
 
-    if (
-      isCameraOn &&
-      videoRef.current &&
-      canvasRef.current &&
-      virtualCanvasRef.current
-    ) {
-      startCamera();
-      const video = videoRef.current;
-      const virtualCanvas = virtualCanvasRef.current;
-      const canvas = canvasRef.current;
-      const virtualContext = virtualCanvas!.getContext('2d');
-      const context = canvas!.getContext('2d');
+    initCamera();
 
-      const cutImageIntoEllipseVirtual = () => {
-        if (!video.paused && !video.ended && virtualContext) {
-          // Clear the canvas
-          virtualContext.clearRect(
-            0,
-            0,
-            virtualCanvas.width,
-            virtualCanvas.height
-          );
-
-          // virtualContext.translate(virtualCanvas.width, 0);
-          // virtualContext.scale(-1, 1);
-
-          // Draw the video frame on the canvas
-
-          // maybe we don't need this
-          // virtualContext.drawImage(
-          //   video,
-          //   0,
-          //   0,
-          //   virtualCanvas.width,
-          //   virtualCanvas.height
-          // );
-
-          // Create a background rectangle with a solid color
-          virtualContext.fillStyle = 'rgba(255, 255, 255, 0)'; // You can change the color here
-          virtualContext.fillStyle = 'rgba(2, 35, 86, 1)'; // You can change the color here
-          virtualContext.fillRect(
-            0,
-            0,
-            virtualCanvas.width,
-            virtualCanvas.height
-          );
-
-          // Create an elliptical path (vertical ellipse)
-          virtualContext.beginPath();
-          virtualContext.ellipse(
-            virtualCanvas.width / 2, // X coordinate of the center
-            virtualCanvas.height / 2, // Y coordinate of the center
-            virtualCanvas.width / 4, // Horizontal radius
-            virtualCanvas.height / 3.5, // Vertical radius (adjust as needed)
-            0, // Rotation angle (0 for vertical)
-            0, // Start angle
-            Math.PI * 2 // End angle
-          );
-          virtualContext.closePath();
-
-          virtualContext.strokeStyle = 'white';
-          virtualContext.lineWidth = 4; // Increase the line width as needed
-
-          virtualContext.setLineDash([10, 5]); // [dashLength, spaceLength]
-
-          virtualContext.stroke();
-
-          virtualContext.clip();
-
-          virtualContext.drawImage(
-            video,
-            0,
-            0,
-            virtualCanvas.width,
-            virtualCanvas.height
-          );
-        }
-
-        return requestAnimationFrame(cutImageIntoEllipseVirtual);
-      };
-
-      const cutImageIntoEllipse = () => {
-        if (!video.paused && !video.ended && context) {
-          // Clear the canvas
-
-          // maybe we dont need it
-          // context.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Set globalCompositeOperation to 'destination-out'
-          context.globalCompositeOperation = 'destination-out';
-
-          // Draw the video frame on the canvas
-          // context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          context.globalCompositeOperation = 'source-over';
-
-          // Create a background rectangle with a solid color
-          context.fillStyle = 'rgba(255, 255, 255, 0)'; // You can change the color here
-
-          // maybe we dont need it
-          // context.fillRect(0, 0, canvas.width, canvas.height);
-
-          // Create an elliptical path (vertical ellipse)
-          context.beginPath();
-          context.ellipse(
-            canvas.width / 2, // X coordinate of the center
-            canvas.height / 2, // Y coordinate of the center
-            canvas.width / 4, // Horizontal radius
-            canvas.height / 2.95, // Vertical radius (adjust as needed)
-            0, // Rotation angle (0 for vertical)
-            0, // Start angle
-            Math.PI * 2 // End angle
-          );
-          context.closePath();
-
-          // Set the stroke style to white and increase the line width
-          context.strokeStyle = 'white';
-          context.lineWidth = 0.5; // Increase the line width as needed
-
-          // Set the line dash style
-          context.setLineDash([10, 5]); // [dashLength, spaceLength]
-
-          // Draw the stroke (border) of the ellipse
-          context.stroke();
-
-          // Clip the canvas to the elliptical path
-          context.clip();
-
-          // Redraw the video frame, clipped to the elliptical path
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          // context.globalCompositeOperation = 'source-over';
-        }
-
-        // Call recursively to keep updating the frame
-        return requestAnimationFrame(cutImageIntoEllipse);
-      };
-
-      requestID1 = cutImageIntoEllipse();
-      requestID2 = cutImageIntoEllipseVirtual();
-    } else {
-      stopCamera();
-    }
-
-    // Clean-up function
     return () => {
-      stopCamera();
+      // Clean up code
+      if (videoRef.current) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach((track) => track.stop());
+        }
+      }
     };
-  }, [isCameraOn]);
+  }, []);
 
-  const toggleCamera = () => {
-    setIsCameraOn((prevState) => !prevState);
-  };
+  // Xử lý sự kiện khi nhấn nút chụp ảnh
+  const handleCaptureAndCrop = () => {
+    if (canvasRef.current && videoRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        context.imageSmoothingEnabled = false;
 
-  const cutAndDisplayImage = () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const dataUrl = canvas.toDataURL('image/png'); // Get the base64 encoded data URL of the canvas content
-      setCutImage(dataUrl);
+        const { videoWidth, videoHeight } = videoRef.current;
+        canvasRef.current.width = videoWidth;
+        canvasRef.current.height = videoHeight;
+        context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+
+        // Cắt ảnh thành phần cụ thể
+        const startY = videoHeight * 0.2; // Tọa độ y bắt đầu cắt
+        const width = videoHeight * 0.55; // Chiều rộng phần cắt
+        const height = videoHeight * 0.55; // Chiều cao phần cắt
+
+        const scaledWidth = 200; // Kích thước ảnh đã chụp
+        const scaledHeight = 200;
+
+        // Tọa độ chính giữa của màn hình
+        const centerX = videoWidth / 2;
+        // Tọa độ bắt đầu của phần cắt
+        const startX = centerX - width / 2;
+        // const startY = centerY - height / 2;
+
+        // Xóa nội dung của canvas trước khi vẽ ảnh mới
+        context.clearRect(
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height
+        );
+
+        context.drawImage(
+          videoRef.current,
+          startX,
+          startY,
+          width,
+          height,
+          0,
+          0,
+          // 0,
+          // 0
+          scaledWidth,
+          scaledHeight
+        );
+
+        // Lấy dữ liệu ảnh từ canvas
+        // const imageData = context.getImageData(startX, startY, width, height);
+        const imageData = context.getImageData(0, 0, scaledWidth, scaledHeight);
+
+        console.log(imageData);
+
+        // Tạo một canvas mới với kích thước phù hợp với phần được cắt
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = scaledWidth;
+        croppedCanvas.height = scaledHeight;
+        const croppedContext = croppedCanvas.getContext('2d');
+
+        // Chuyển dữ liệu ảnh sang định dạng base64 để hiển thị
+        // const croppedImage = canvasRef.current.toDataURL();
+        // setCapturedImage(croppedImage);
+
+        // Vẽ lại ảnh từ imageData lên canvas mới
+        if (croppedContext) {
+          croppedContext.putImageData(imageData, 0, 0);
+
+          // Lưu ảnh đã cắt từ canvas vào state để hiển thị
+          setCapturedImage(croppedCanvas.toDataURL());
+        }
+      }
     }
   };
-
-  // const exportImage = () => {
-  //   if (canvasRef.current) {
-  //     const canvas = canvasRef.current;
-  //     const link = document.createElement('a');
-  //     link.download = 'ellipse_image.png';
-  //     link.href = canvas.toDataURL('image/png');
-  //     link.click();
-  //   }
-  // };
 
   return (
-    <div>
-      <div className="header">
-        {/* <button onClick={toggleCamera}>
-          {isCameraOn ? 'Turn Off Camera' : 'Turn On Camera'}
-        </button> */}
-        {/* <button onClick={exportImage}>Export Image</button> */}
-      </div>
-
-      <video
-        ref={videoRef}
-        style={{ display: isCameraOn ? 'none' : 'none' }}
-        autoPlay
-      ></video>
-      <div className="captureContainer">
-        <canvas
-          ref={virtualCanvasRef}
-          width={480}
-          height={600}
-          style={{
-            display: isCameraOn ? 'block' : 'none',
-          }}
-          className="canvas1"
-        ></canvas>
-        <canvas
-          ref={canvasRef}
-          width={480}
-          height={600}
-          style={{
-            display: isCameraOn ? 'none' : 'none',
-          }}
-          className="canvas1"
-        ></canvas>
+    <>
+      <div className="cam-holder">
+        <div className="vid-holder">
+          {/* Hiển thị video từ camera */}
+          <video
+            className="vid"
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            style={{ maxWidth: '100%' }}
+          ></video>
+        </div>
+        <img
+          className="faceMask"
+          src="https://cdn.discordapp.com/attachments/1092261465236443189/1212247596748242955/faceMask.png?ex=65f1248d&is=65deaf8d&hm=3d89fb8dd99b229a4de604b022c5a1a0cb9334ea2ded7f26b3aa446b172efade&"
+          alt=""
+        />
+        <div>
+          {/* Canvas để vẽ hình ảnh từ camera */}
+          <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+        </div>
         <div className="captureBox">
-          <div onClick={cutAndDisplayImage} className="circle-outer">
+          <div onClick={handleCaptureAndCrop} className="circleOuter">
             <div className="circle"></div>
           </div>
           <div className="captureText">
             Positionieren Sie Gesicht und Augenpartie und machen Sie ein Foto
           </div>
-          <div onClick={toggleCamera} className="closeBtn">
+          <div className="closeBtn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               height="28"
@@ -266,12 +152,10 @@ const FaceDetectionComponent: React.FC = () => {
             </svg>
           </div>
         </div>
-        <div className="imgBox">
-          {cutImage && <img width={'100vw'} src={cutImage} alt="Cut Image" />}
-        </div>
       </div>
-    </div>
+      <div>{capturedImage && <img src={capturedImage} alt="Captured" />}</div>
+    </>
   );
 };
 
-export default FaceDetectionComponent;
+export default App;
