@@ -48,7 +48,7 @@ const App: React.FC = () => {
         context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
 
         // Cắt ảnh thành phần cụ thể
-        const startY = videoHeight * 0.2; // Tọa độ y bắt đầu cắt
+        const startY = videoHeight * 0.1; // Tọa độ y bắt đầu cắt
         const width = videoHeight * 0.55; // Chiều rộng phần cắt
         const height = videoHeight * 0.55; // Chiều cao phần cắt
 
